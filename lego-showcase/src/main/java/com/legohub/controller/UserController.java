@@ -1,5 +1,6 @@
 package com.legohub.controller;
 
+import com.legohub.exception.UserAlreadyExistsException;
 import com.legohub.model.User;
 import com.legohub.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,9 +21,24 @@ public class UserController {
         this.userService = userService;
     }
 
+    @PostMapping("/login")
+    public ResponseEntity<String> login(@RequestBody User user) {
+        if (userService.login(user.getUsername(), user.getPassword())) {
+            return ResponseEntity.ok().build();
+        } else {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
+        }
+    }
+
     @PostMapping("/register")
     public ResponseEntity<User> register(@RequestBody User user) {
-        User newUser = userService.registerNewUser(user);
-        return new ResponseEntity<>(newUser, HttpStatus.CREATED);
+        try {
+            User newUser = userService.registerUser(user);
+            return ResponseEntity.status(HttpStatus.CREATED).body(newUser);
+        } catch (UserAlreadyExistsException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(null);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
     }
 }
