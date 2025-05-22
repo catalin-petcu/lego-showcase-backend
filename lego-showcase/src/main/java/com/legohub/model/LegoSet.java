@@ -1,7 +1,9 @@
 package com.legohub.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
+
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 public class LegoSet {
@@ -11,6 +13,9 @@ public class LegoSet {
     private String name;
     private String collection;
     private int pieceCount;
+
+    @OneToMany(mappedBy = "legoSet", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<UserLegoSet> users = new HashSet<>();
 
     public LegoSet() {}
 
@@ -51,5 +56,13 @@ public class LegoSet {
 
     public void setPieceCount(int pieceCount) {
         this.pieceCount = pieceCount;
+    }
+
+    public Set<UserLegoSet> getUsers() {
+        return users;
+    }
+
+    public void setUsers(Set<UserLegoSet> users) {
+        this.users = users;
     }
 }

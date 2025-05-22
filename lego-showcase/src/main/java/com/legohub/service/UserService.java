@@ -1,7 +1,9 @@
 package com.legohub.service;
 
 import com.legohub.exception.UserAlreadyExistsException;
+import com.legohub.model.LegoSet;
 import com.legohub.model.User;
+import com.legohub.model.UserLegoSet;
 import com.legohub.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -42,5 +44,10 @@ public class UserService {
         }
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         return userRepository.save(user);
+    }
+
+    public User getUserById(Long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
     }
 }

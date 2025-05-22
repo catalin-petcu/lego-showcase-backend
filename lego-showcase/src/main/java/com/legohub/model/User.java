@@ -2,6 +2,9 @@ package com.legohub.model;
 
 import jakarta.persistence.*;
 
+import java.util.HashSet;
+import java.util.Set;
+
 @Entity
 @Table(name = "lego_user")
 public class User {
@@ -12,6 +15,9 @@ public class User {
 
     private String username;
     private String password;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<UserLegoSet> userLegoSets = new HashSet<>();
 
     public User() {}
 
@@ -42,5 +48,13 @@ public class User {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public Set<UserLegoSet> getUserLegoSets() {
+        return userLegoSets;
+    }
+
+    public void setUserLegoSets(Set<UserLegoSet> userLegoSets) {
+        this.userLegoSets = userLegoSets;
     }
 }

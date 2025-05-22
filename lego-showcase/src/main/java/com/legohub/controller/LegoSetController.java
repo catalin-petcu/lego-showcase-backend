@@ -1,22 +1,27 @@
 package com.legohub.controller;
 
 import com.legohub.model.LegoSet;
+import com.legohub.model.User;
 import com.legohub.service.LegoSetService;
+import com.legohub.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/legosets")
 public class LegoSetController {
     private final LegoSetService legoSetService;
+    private final UserService userService;
 
     @Autowired
-    public LegoSetController(LegoSetService legoSetService) {
+    public LegoSetController(LegoSetService legoSetService, UserService userService) {
         this.legoSetService = legoSetService;
+        this.userService = userService;
     }
 
     @GetMapping
@@ -26,8 +31,17 @@ public class LegoSetController {
     }
 
     @PostMapping
-    public ResponseEntity<LegoSet> addLegoSet(@RequestBody LegoSet legoSet) {
-        legoSetService.addLegoSet(legoSet);
-        return new ResponseEntity<>(legoSet, HttpStatus.CREATED);
+    public ResponseEntity<LegoSet> addLegoSet(@RequestBody LegoSet legoSet, @RequestParam Long userId) {
+        LegoSet savedLegoSet = legoSetService.saveLegoSetIfNotExists(legoSet);
+        User user = userService.getUserById(userId);
+        legoSetService.addLegoSetToUser(user, legoSet);
+        return ResponseEntity.status(HttpStatus.CREATED).body(savedLegoSet);
+    }
+
+    @GetMapping("/{userId}")
+    public ResponseEntity<Set<LegoSet>> getUserLegoSets(@PathVariable("userId") Long userId) {
+        User user = userService.getUserById(userId);
+        Set<LegoSet> legoSets = legoSetService.getLegoSetsByUser(user);
+        return ResponseEntity.ok(legoSets);
     }
 }
