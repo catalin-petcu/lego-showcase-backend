@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -42,6 +43,9 @@ public class LegoSetController {
     public ResponseEntity<Set<LegoSet>> getUserLegoSets(@PathVariable("userId") Long userId) {
         User user = userService.getUserById(userId);
         Set<LegoSet> legoSets = legoSetService.getLegoSetsByUser(user);
+        if (legoSets.isEmpty()) {
+            return ResponseEntity.ok(new HashSet<>());
+        }
         return ResponseEntity.ok(legoSets);
     }
 }
