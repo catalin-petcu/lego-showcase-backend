@@ -1,5 +1,6 @@
 package com.legohub.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 @Entity
@@ -11,10 +12,12 @@ public class UserLegoSet {
 
     @ManyToOne
     @JoinColumn(name = "user_id")
+    @JsonIgnore
     private User user;
 
     @ManyToOne
     @JoinColumn(name = "lego_set_id")
+    @JsonIgnore
     private LegoSet legoSet;
 
     public Long getId() {
