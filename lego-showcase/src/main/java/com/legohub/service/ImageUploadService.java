@@ -12,16 +12,16 @@ import java.util.UUID;
 
 @Service
 public class ImageUploadService {
-    private final String uploadDir = "uploads/lego-images/";
+    private static final String UPLOAD_DIR = "uploads/lego-images/";
 
     public ImageUploadService() {
         try {
-            Path uploadPath = Paths.get(uploadDir);
+            Path uploadPath = Paths.get(UPLOAD_DIR);
             if (!Files.exists(uploadPath)) {
                 Files.createDirectories(uploadPath);
             }
         } catch (Exception e) {
-            throw new RuntimeException("Failed to create upload directory: " + uploadDir, e);
+            throw new RuntimeException("Failed to create upload directory: " + UPLOAD_DIR, e);
         }
     }
 
@@ -45,7 +45,7 @@ public class ImageUploadService {
             String fileExtenstion = originalFilename.substring(originalFilename.lastIndexOf("."));
             String uniqueFilename = UUID.randomUUID() + fileExtenstion;
 
-            Path targetPath = Paths.get(uploadDir + uniqueFilename);
+            Path targetPath = Paths.get(UPLOAD_DIR + uniqueFilename);
             Files.copy(file.getInputStream(), targetPath, StandardCopyOption.REPLACE_EXISTING);
 
             return "/images/" + uniqueFilename;

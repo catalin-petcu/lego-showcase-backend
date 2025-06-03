@@ -1,6 +1,8 @@
 package com.legohub.controller;
 
-import ch.qos.logback.core.util.StringUtil;
+import com.legohub.dto.response.ErrorResponse;
+import com.legohub.dto.response.ImageUploadReponse;
+import com.legohub.dto.response.LegoSetReponse;
 import com.legohub.model.LegoSet;
 import com.legohub.model.User;
 import com.legohub.service.ImageUploadService;
@@ -13,8 +15,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -33,7 +33,7 @@ public class LegoSetController {
     }
 
     @PostMapping
-    public ResponseEntity<?> addLegoSet(@RequestBody Map<String, String> request) {
+    public ResponseEntity<Object> addLegoSet(@RequestBody Map<String, String> request) {
         try {
             User currentUser = userService.getCurrentAuthenticatedUser();
             if (currentUser == null) {
@@ -42,21 +42,22 @@ public class LegoSetController {
 
             String setNumber = request.get("setNumber");
             if (StringUtils.isNullOrEmpty(setNumber)) {
-                return ResponseEntity.badRequest().body(Map.of("error", "Set number is required"));
+                return ResponseEntity.badRequest().body(new ErrorResponse("Set number is required"));
             }
 
             LegoSet legoSet = legoSetService.validateAndSaveLegoSet(setNumber);
 
             legoSetService.addLegoSetToUser(currentUser, legoSet);
 
-            return ResponseEntity.status(HttpStatus.CREATED).body(legoSet);
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(new LegoSetReponse("LEGO set added successfully", legoSet));
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            return ResponseEntity.badRequest().body(new ErrorResponse(e.getMessage()));
         }
     }
 
     @GetMapping("/my-sets")
-    public ResponseEntity<Set<LegoSet>> getMyLegoSets() {
+    public ResponseEntity<Object> getMyLegoSets() {
         try {
             User currentUser = userService.getCurrentAuthenticatedUser();
             if (currentUser == null) {
@@ -66,12 +67,13 @@ public class LegoSetController {
             Set<LegoSet> legoSets = legoSetService.getLegoSetsByUser(currentUser);
             return ResponseEntity.ok(legoSets);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ErrorResponse("Failed to retrieve LEGO sets: " + e.getMessage()));
         }
     }
 
     @PostMapping("/{setId}/upload-image")
-    public ResponseEntity<?> uploadImage(@PathVariable String setId, @RequestParam("image") MultipartFile file) {
+    public ResponseEntity<Object> uploadImage(@PathVariable String setId, @RequestParam("image") MultipartFile file) {
         try {
             User currentUser = userService.getCurrentAuthenticatedUser();
             if (currentUser == null) {
@@ -79,17 +81,16 @@ public class LegoSetController {
             }
 
             String relativeImageUrl = imageUploadService.uploadImage(file);
-
             String fullImageUrl = "http://localhost:8080" + relativeImageUrl;
             LegoSet updatedSet = legoSetService.updateSetImage(Long.valueOf(setId), fullImageUrl, currentUser);
 
-            return ResponseEntity.ok(Map.of(
-                    "message", "Image uploaded successfully",
-                    "imageUrl", fullImageUrl,
-                    "legoSet", updatedSet
+            return ResponseEntity.ok(new ImageUploadReponse(
+                    "Image uploaded successfully",
+                    fullImageUrl,
+                    updatedSet
             ));
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            return ResponseEntity.badRequest().body(new ErrorResponse(e.getMessage()));
         }
     }
 }

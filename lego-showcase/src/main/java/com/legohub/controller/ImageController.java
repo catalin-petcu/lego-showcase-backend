@@ -13,12 +13,12 @@ import java.nio.file.Paths;
 
 @RestController
 public class ImageController {
-    private final String uploadDirectory = "uploads/lego-images/";
+    private static final String UPLOAD_DIRECTORY = "uploads/lego-images/";
 
     @GetMapping("/images/{filename}")
     public ResponseEntity<Resource> getImage(@PathVariable String filename) {
         try {
-            Path imagePath = Paths.get(uploadDirectory).resolve(filename);
+            Path imagePath = Paths.get(UPLOAD_DIRECTORY).resolve(filename);
             Resource resource = new UrlResource(imagePath.toUri());
 
             if (resource.exists() && resource.isReadable()) {
