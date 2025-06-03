@@ -39,15 +39,14 @@ public class LegoSetService {
             JsonNode rebrickableData = rebrickableService.getSetByNumber(setNumber);
 
             String name = rebrickableData.get("name").asText();
-            int themeId = rebrickableData.get("theme_id").asInt();
 
+            int themeId = rebrickableData.get("theme_id").asInt();
             String collection = rebrickableService.getThemeName(themeId);
 
             int pieceCount = rebrickableData.get("num_parts").asInt();
             Integer year = rebrickableData.has("year") ? rebrickableData.get("year").asInt() : null;
-            String imageUrl = rebrickableData.has("image_url") ? rebrickableData.get("image_url").asText() : null;
 
-            LegoSet newSet = new LegoSet(setNumber, name, collection, pieceCount, year, imageUrl);
+            LegoSet newSet = new LegoSet(setNumber, name, collection, pieceCount, year);
             LegoSet savedSet = legoSetRepository.save(newSet);
 
             System.out.println("Saved new Lego set: " + savedSet.getName());
@@ -76,5 +75,21 @@ public class LegoSetService {
             legoSets.add(userLegoSet.getLegoSet());
         }
         return legoSets;
+    }
+
+    public LegoSet updateSetImage(Long setId, String imageUrl, User user) {
+        LegoSet legoSet = legoSetRepository.findById(setId)
+                .orElseThrow(() -> new RuntimeException("Lego set not found"));
+
+        UserLegoSet userLegoSet = userLegoSetRepository.findByUserAndLegoSet(user, legoSet);
+        if (userLegoSet == null) {
+            throw new RuntimeException("User does not own this Lego set");
+        }
+
+        legoSet.setUserImageUrl(imageUrl);
+        LegoSet savedSet = legoSetRepository.save(legoSet);
+
+        System.out.println("Updated Lego set image: " + savedSet.getName() + " with URL: " + imageUrl);
+        return savedSet;
     }
 }

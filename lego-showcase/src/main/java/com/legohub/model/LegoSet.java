@@ -19,7 +19,7 @@ public class LegoSet {
     private String collection;
     private int pieceCount;
     private Integer year;
-    private String imageUrl;
+    private String userImageUrl;
 
     @OneToMany(mappedBy = "legoSet", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
@@ -27,13 +27,13 @@ public class LegoSet {
 
     public LegoSet() {}
 
-    public LegoSet(String setNumber, String name, String collection, int pieceCount, Integer year, String imageUrl) {
+    public LegoSet(String setNumber, String name, String collection, int pieceCount, Integer year) {
         this.setNumber = setNumber;
         this.name = name;
         this.collection = collection;
         this.pieceCount = pieceCount;
         this.year = year;
-        this.imageUrl = imageUrl;
+        this.userImageUrl = null;
     }
 
     public Long getSetId() {
@@ -78,11 +78,11 @@ public class LegoSet {
         this.year = year;
     }
 
-    public String getImageUrl() {
-        return imageUrl;
+    public String getUserImageUrl() {
+        return userImageUrl;
     }
-    public void setImageUrl(String imageUrl) {
-        this.imageUrl = imageUrl;
+    public void setUserImageUrl(String imageUrl) {
+        this.userImageUrl = imageUrl;
     }
 
     public Set<UserLegoSet> getUsers() {
@@ -90,5 +90,9 @@ public class LegoSet {
     }
     public void setUsers(Set<UserLegoSet> users) {
         this.users = users;
+    }
+
+    public boolean hasImage() {
+        return userImageUrl != null && !userImageUrl.trim().isEmpty();
     }
 }

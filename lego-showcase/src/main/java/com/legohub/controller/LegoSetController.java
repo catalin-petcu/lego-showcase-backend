@@ -3,6 +3,7 @@ package com.legohub.controller;
 import ch.qos.logback.core.util.StringUtil;
 import com.legohub.model.LegoSet;
 import com.legohub.model.User;
+import com.legohub.service.ImageUploadService;
 import com.legohub.service.LegoSetService;
 import com.legohub.service.UserService;
 import com.legohub.util.StringUtils;
@@ -10,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.HashSet;
 import java.util.List;
@@ -21,11 +23,13 @@ import java.util.Set;
 public class LegoSetController {
     private final LegoSetService legoSetService;
     private final UserService userService;
+    private final ImageUploadService imageUploadService;
 
     @Autowired
-    public LegoSetController(LegoSetService legoSetService, UserService userService) {
+    public LegoSetController(LegoSetService legoSetService, UserService userService, ImageUploadService imageUploadService) {
         this.legoSetService = legoSetService;
         this.userService = userService;
+        this.imageUploadService = imageUploadService;
     }
 
     @PostMapping
@@ -63,6 +67,29 @@ public class LegoSetController {
             return ResponseEntity.ok(legoSets);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @PostMapping("/{setId}/upload-image")
+    public ResponseEntity<?> uploadImage(@PathVariable String setId, @RequestParam("image") MultipartFile file) {
+        try {
+            User currentUser = userService.getCurrentAuthenticatedUser();
+            if (currentUser == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
+
+            String relativeImageUrl = imageUploadService.uploadImage(file);
+
+            String fullImageUrl = "http://localhost:8080" + relativeImageUrl;
+            LegoSet updatedSet = legoSetService.updateSetImage(Long.valueOf(setId), fullImageUrl, currentUser);
+
+            return ResponseEntity.ok(Map.of(
+                    "message", "Image uploaded successfully",
+                    "imageUrl", fullImageUrl,
+                    "legoSet", updatedSet
+            ));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
 }
