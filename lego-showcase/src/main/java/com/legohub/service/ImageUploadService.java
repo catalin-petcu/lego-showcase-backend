@@ -1,5 +1,6 @@
 package com.legohub.service;
 
+import com.legohub.exception.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -21,22 +22,22 @@ public class ImageUploadService {
                 Files.createDirectories(uploadPath);
             }
         } catch (Exception e) {
-            throw new RuntimeException("Failed to create upload directory: " + UPLOAD_DIR, e);
+            throw new DirectoryCreationException("Failed to create upload directory: " + UPLOAD_DIR, e);
         }
     }
 
     public String uploadImage(MultipartFile file) {
         if (file.isEmpty()) {
-            throw new RuntimeException("Please select a file to upload");
+            throw new FileEmptyException("Please select a file to upload");
         }
 
         String contentType = file.getContentType();
         if (contentType == null || !contentType.startsWith("image/")) {
-            throw new RuntimeException("Please select a valid image file");
+            throw new InvalidFileTypeException("Please select a valid image file");
         }
 
         if (file.getSize() > 5 * 1024 * 1024) { // 5 MB limit
-            throw new RuntimeException("File size exceeds the maximum limit of 5 MB");
+            throw new FileSizeExceededException("File size exceeds the maximum limit of 5 MB");
         }
 
         try {
@@ -50,7 +51,7 @@ public class ImageUploadService {
 
             return "/images/" + uniqueFilename;
         } catch (IOException e) {
-            throw new RuntimeException("Failed to upload image: " + e.getMessage());
+            throw new FileUploadException("Failed to upload image: " + e.getMessage());
         }
     }
 }

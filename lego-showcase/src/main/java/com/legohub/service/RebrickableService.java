@@ -2,6 +2,8 @@ package com.legohub.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.legohub.exception.LegoFetchException;
+import com.legohub.exception.NoLegoThemeException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -38,7 +40,7 @@ public class RebrickableService {
             ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
             return objectMapper.readTree(response.getBody());
         } catch (Exception e) {
-            throw new RuntimeException("Failed to fetch LEGO set: " + setNumber);
+            throw new LegoFetchException("Failed to fetch LEGO set: " + setNumber);
         }
     }
 
@@ -54,7 +56,7 @@ public class RebrickableService {
             JsonNode themeData = objectMapper.readTree(response.getBody());
             return themeData.get("name").asText();
         } catch (Exception e) {
-            throw new RuntimeException("Failed to fetch LEGO theme: " + themeId);
+            throw new NoLegoThemeException("Failed to fetch LEGO theme: " + themeId);
         }
     }
 }

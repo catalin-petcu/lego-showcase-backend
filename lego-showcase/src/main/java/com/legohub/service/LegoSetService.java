@@ -1,11 +1,16 @@
 package com.legohub.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.legohub.exception.InvalidLegoNumberException;
+import com.legohub.exception.LegoAlreadyExistsException;
+import com.legohub.exception.NoUserLegoRelationException;
 import com.legohub.model.LegoSet;
 import com.legohub.model.User;
 import com.legohub.model.UserLegoSet;
 import com.legohub.repository.LegoSetRepository;
 import com.legohub.repository.UserLegoSetRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -15,6 +20,8 @@ import java.util.Set;
 
 @Service
 public class LegoSetService {
+    private static final Logger LOGGER = LoggerFactory.getLogger(LegoSetService.class);
+
     private final LegoSetRepository legoSetRepository;
     private final UserLegoSetRepository userLegoSetRepository;
     private final RebrickableService rebrickableService;
@@ -31,7 +38,7 @@ public class LegoSetService {
     public LegoSet validateAndSaveLegoSet(String setNumber) {
         LegoSet existingSet = legoSetRepository.findBySetNumber(setNumber);
         if (existingSet != null) {
-            System.out.println("Found existing Lego set: " + existingSet.getName());
+            LOGGER.info("Found existing Lego set: {}", existingSet.getName());
             return existingSet;
         }
 
@@ -49,17 +56,17 @@ public class LegoSetService {
             LegoSet newSet = new LegoSet(setNumber, name, collection, pieceCount, year);
             LegoSet savedSet = legoSetRepository.save(newSet);
 
-            System.out.println("Saved new Lego set: " + savedSet.getName());
+            LOGGER.info("Saved new Lego set: {}", savedSet.getName());
             return savedSet;
         } catch (Exception e) {
-            throw new RuntimeException("Invalid Lego set number: " + setNumber);
+            throw new InvalidLegoNumberException("Invalid Lego set number: " + setNumber);
         }
     }
 
     public void addLegoSetToUser(User user, LegoSet legoSet) {
         UserLegoSet existingUserLegoSet = userLegoSetRepository.findByUserAndLegoSet(user, legoSet);
         if (existingUserLegoSet != null) {
-            throw new RuntimeException("Lego set already exists: " + legoSet.getName());
+            throw new LegoAlreadyExistsException("Lego set already exists: " + legoSet.getName());
         }
 
         UserLegoSet userLegoSet = new UserLegoSet();
@@ -83,13 +90,13 @@ public class LegoSetService {
 
         UserLegoSet userLegoSet = userLegoSetRepository.findByUserAndLegoSet(user, legoSet);
         if (userLegoSet == null) {
-            throw new RuntimeException("User does not own this Lego set");
+            throw new NoUserLegoRelationException("User does not own this Lego set");
         }
 
         legoSet.setUserImageUrl(imageUrl);
         LegoSet savedSet = legoSetRepository.save(legoSet);
 
-        System.out.println("Updated Lego set image: " + savedSet.getName() + " with URL: " + imageUrl);
+        LOGGER.info("Updated Lego set image: {} with URL: {}", savedSet.getName(), imageUrl);
         return savedSet;
     }
 }
